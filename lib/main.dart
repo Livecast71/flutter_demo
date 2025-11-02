@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'models/confetti_particle.dart';
+import 'widgets/confetti_painter.dart';
+import 'widgets/word_item.dart';
+import 'services/app_group_storage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,7 +64,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   late AnimationController _confettiController;
   late AnimationController _fabController;
   final Random _random = Random();
-  GlobalKey? _lastTappedKey;
 
   Color _getRandomColor() {
     return Color.fromRGBO(
@@ -71,20 +74,21 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _toggleFavorite(String word, GlobalKey key) {
+  void _toggleFavorite(String word) async {
     final wasFavorite = _favorites.contains(word);
     setState(() {
       if (wasFavorite) {
         _favorites.remove(word);
       } else {
         _favorites.add(word);
-        _lastTappedKey = key;
         _startConfettiAnimation();
         _fabController.forward(from: 0.0).then((_) {
           _fabController.reverse();
         });
       }
     });
+    // Save to app group storage
+    await AppGroupStorage.saveFavorites(_favorites.toList());
   }
 
   void _startConfettiAnimation() {
@@ -118,6 +122,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     for (var word in _randomWords) {
       _wordColors[word] = _getRandomColor();
     }
+    // Load favorites from app group storage
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final savedFavorites = await AppGroupStorage.loadFavorites();
+    if (mounted) {
+      setState(() {
+        _favorites.addAll(savedFavorites);
+      });
+    }
   }
 
   @override
@@ -128,74 +143,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Widget _buildWordItem(String word, bool isFavorite, GlobalKey key) {
-    final color = _wordColors[word] ?? Colors.grey;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: InkWell(
-        onTap: () => _toggleFavorite(word, key),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          key: key,
-          width: double.infinity,
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 8.0),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isFavorite
-                ? [
-                    BoxShadow(
-                      color: color.withOpacity(0.5),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  word,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: isFavorite
-                        ? [
-                            const Shadow(
-                              color: Colors.white,
-                              blurRadius: 4,
-                            ),
-                          ]
-                        : null,
-                  ),
-                ),
-              ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) {
-                  return ScaleTransition(
-                    scale: animation,
-                    child: RotationTransition(
-                      turns: animation,
-                      child: child,
-                    ),
-                  );
-                },
-                child: Icon(
-                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                  key: ValueKey(isFavorite),
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildListView() {
     return Padding(
@@ -223,9 +170,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             child: Stack(
               children: [
                 ListView(
-                  children: _randomWords.asMap().entries.map((entry) {
-                    final key = GlobalKey();
-                    return _buildWordItem(entry.value, _favorites.contains(entry.value), key);
+                  children: _randomWords.map((word) {
+                    return WordItem(
+                      word: word,
+                      isFavorite: _favorites.contains(word),
+                      color: _wordColors[word] ?? Colors.grey,
+                      onTap: () => _toggleFavorite(word),
+                    );
                   }).toList(),
                 ),
                 if (_confettiParticles.isNotEmpty)
@@ -290,9 +241,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 )
               : Expanded(
                   child: ListView(
-                    children: favoriteWords.asMap().entries.map((entry) {
-                      final key = GlobalKey();
-                      return _buildWordItem(entry.value, true, key);
+                    children: favoriteWords.map((word) {
+                      return WordItem(
+                        word: word,
+                        isFavorite: true,
+                        color: _wordColors[word] ?? Colors.grey,
+                        onTap: () => _toggleFavorite(word),
+                      );
                     }).toList(),
                   ),
                 ),
@@ -323,11 +278,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             child: Transform.rotate(
               angle: _fabController.value * 0.5,
               child: FloatingActionButton(
-                onPressed: () {
+                onPressed: () async {
                   setState(() {
                     _favorites.clear();
                     _confettiParticles.clear();
                   });
+                  // Clear from app group storage
+                  await AppGroupStorage.clearFavorites();
                 },
                 backgroundColor: Colors.deepPurple,
                 child: const Icon(Icons.refresh, color: Colors.white),
@@ -354,77 +311,5 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
-}
-
-// Advanced Flutter: Custom Confetti Particle System
-class ConfettiParticle {
-  final double startX;
-  final double startY;
-  final double velocityX;
-  final double velocityY;
-  final Color color;
-  final double size;
-  final double rotationSpeed;
-
-  ConfettiParticle(Random random)
-      : startX = random.nextDouble() * 0.8 + 0.1, // 10% to 90% of screen width
-        startY = random.nextDouble() * 0.3, // Top 30% of screen
-        velocityX = (random.nextDouble() - 0.5) * 0.02,
-        velocityY = random.nextDouble() * 0.01 + 0.005,
-        color = Color.fromRGBO(
-          random.nextInt(256),
-          random.nextInt(256),
-          random.nextInt(256),
-          1.0,
-        ),
-        size = random.nextDouble() * 8 + 4,
-        rotationSpeed = (random.nextDouble() - 0.5) * 0.1;
-}
-
-class ConfettiPainter extends CustomPainter {
-  final List<ConfettiParticle> particles;
-  final double progress;
-
-  ConfettiPainter(this.particles, this.progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final particle in particles) {
-      final x = particle.startX * size.width + particle.velocityX * size.width * progress * 50;
-      final y = particle.startY * size.height + particle.velocityY * size.height * progress * 100;
-      final rotation = particle.rotationSpeed * progress * 10;
-
-      // Apply gravity effect
-      final gravityY = y + (progress * progress * 200);
-
-      if (gravityY < size.height && x > 0 && x < size.width) {
-        final paint = Paint()
-          ..color = particle.color.withOpacity(1.0 - progress)
-          ..style = PaintingStyle.fill;
-
-        canvas.save();
-        canvas.translate(x, gravityY);
-        canvas.rotate(rotation);
-
-        // Draw confetti piece (rectangle)
-        final rect = RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset.zero,
-            width: particle.size,
-            height: particle.size * 0.6,
-          ),
-          const Radius.circular(2),
-        );
-        canvas.drawRRect(rect, paint);
-
-        canvas.restore();
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(ConfettiPainter oldDelegate) {
-    return oldDelegate.progress != progress;
   }
 }
