@@ -46,14 +46,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   final List<String> _words = [
-    'apple',
-    'banana',
-    'cherry',
-    'date',
-    'elderberry',
-    'fig',
-    'grape',
-    'honeydew',
+    'Fender',
+    'Gibson',
+    'Martin',
+    'Taylor',
+    'Yamaha',
+    'Ibanez',
+    'PRS',
+    'Epiphone',
   ];
   late List<String> _randomWords;
   final Set<String> _favorites = {};
