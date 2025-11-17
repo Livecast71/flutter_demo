@@ -1,25 +1,25 @@
 # flutter_demo
 
-A Flutter demonstration app showcasing a word list with favorites functionality and tab navigation.
+A Flutter demonstration app showcasing a guitar brands list with favorites functionality, iCloud sync, iOS widget, and watchOS app support.
 
 ## Features
 
-### Word List Display
-- Displays a randomized list of words (apple, banana, cherry, date, elderberry, fig, grape, honeydew)
-- Each word is displayed in a full-width container with:
+### Guitar Brands List Display
+- Displays a randomized list of guitar brands (Fender, Gibson, Martin, Taylor, Yamaha, Ibanez, PRS, Epiphone)
+- Each brand is displayed in a full-width container with:
   - Random background colors
   - Rounded corners
   - Left padding for better readability
   - White text for contrast
 
 ### Favorites System
-- Tap any word item to toggle it as a favorite
+- Tap any guitar brand item to toggle it as a favorite
 - Favorite status is indicated by a heart icon (filled for favorites, outline for non-favorites)
-- Favorites are synchronized across both tabs
+- Favorites are synchronized across both tabs and synced via iCloud
 
 ### Tab Navigation
-- **List Tab**: Shows all words with their favorite status
-- **Favorites Tab**: Shows only favorited words with a count in the header
+- **List Tab**: Shows all guitar brands with their favorite status
+- **Favorites Tab**: Shows only favorited brands with a count in the header
 - Bottom navigation bar for easy tab switching
 - Instant tab switching without animation (using IndexedStack)
 
@@ -65,10 +65,13 @@ flutter run
 
 ## How It Works
 
-1. **Word List**: On app start, a list of words is shuffled randomly and each word is assigned a random color
-2. **Favorites**: Users can tap any word to add/remove it from favorites
-3. **Tab Navigation**: Switch between viewing all words or just favorites using the bottom navigation bar
+1. **Guitar Brands List**: On app start, a list of guitar brands is shuffled randomly and each brand is assigned a random color
+2. **Favorites**: Users can tap any guitar brand to add/remove it from favorites
+3. **Tab Navigation**: Switch between viewing all brands or just favorites using the bottom navigation bar
 4. **State Management**: Uses Flutter's StatefulWidget to manage favorites and tab state
+5. **iCloud Sync**: Favorites are synced across devices via iCloud Key-Value Store
+6. **Widget Extension**: iOS widget displays favorites on the home screen
+7. **Watch App**: watchOS app shows favorites synced via iCloud
 
 ## Technologies Used
 
