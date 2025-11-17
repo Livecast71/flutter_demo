@@ -15,6 +15,8 @@ A Flutter demonstration app showcasing a guitar brands list with favorites funct
 ### Favorites System
 - Tap any guitar brand item to toggle it as a favorite
 - Favorite status is indicated by a heart icon (filled for favorites, outline for non-favorites)
+- **Guitar sounds**: Plays a random guitar chord sound (C, G, A, D, or E major) when adding favorites
+- Confetti animation with stars and hearts when adding favorites
 - Favorites are synchronized across both tabs and synced via iCloud
 
 ### Tab Navigation
@@ -56,8 +58,13 @@ flutter run
 ## Project Structure
 
 - `lib/main.dart` - Main application code with tab navigation and favorites functionality
+- `lib/services/` - Service classes (app group storage, audio service)
+- `lib/models/` - Data models (confetti particles)
+- `lib/widgets/` - Reusable widget components
+- `assets/sounds/` - Guitar chord sound files (from Wikimedia Commons)
+- `AppIcons/` - App icons for all platforms
 - `android/` - Android platform-specific files
-- `ios/` - iOS platform-specific files
+- `ios/` - iOS platform-specific files (including widget and watch app)
 - `web/` - Web platform-specific files
 - `linux/` - Linux platform-specific files
 - `windows/` - Windows platform-specific files
@@ -67,17 +74,25 @@ flutter run
 
 1. **Guitar Brands List**: On app start, a list of guitar brands is shuffled randomly and each brand is assigned a random color
 2. **Favorites**: Users can tap any guitar brand to add/remove it from favorites
+   - Adding a favorite triggers a confetti animation and plays a random guitar chord sound
+   - Sounds are sourced from Wikimedia Commons (free, open-source guitar chord samples)
 3. **Tab Navigation**: Switch between viewing all brands or just favorites using the bottom navigation bar
 4. **State Management**: Uses Flutter's StatefulWidget to manage favorites and tab state
 5. **iCloud Sync**: Favorites are synced across devices via iCloud Key-Value Store
 6. **Widget Extension**: iOS widget displays favorites on the home screen
 7. **Watch App**: watchOS app shows favorites synced via iCloud
+8. **Audio Feedback**: Uses `just_audio` package for cross-platform audio playback
 
 ## Technologies Used
 
 - Flutter Framework
 - Material Design
 - Dart Programming Language
+- just_audio - Cross-platform audio playback
+- iCloud Key-Value Store - Cross-device synchronization
+- App Groups - Shared storage between app and extensions
+- WidgetKit - iOS widget support
+- watchOS - Apple Watch app support
 
 ## License
 

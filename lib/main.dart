@@ -4,6 +4,7 @@ import 'models/confetti_particle.dart';
 import 'widgets/confetti_painter.dart';
 import 'widgets/word_item.dart';
 import 'services/app_group_storage.dart';
+import 'services/audio_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -85,6 +86,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         _fabController.forward(from: 0.0).then((_) {
           _fabController.reverse();
         });
+        // Play a random guitar chord sound when adding to favorites
+        AudioService.playGuitarSound();
       }
     });
     // Save to app group storage
@@ -140,6 +143,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     _tabController.dispose();
     _confettiController.dispose();
     _fabController.dispose();
+    AudioService.dispose();
     super.dispose();
   }
 
